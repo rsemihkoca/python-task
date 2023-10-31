@@ -6,21 +6,23 @@ import pandas as pd
 
 app = FastAPI()
 
-
-# Define the API endpoints and access token
-LOGIN_URL = "https://api.baubuddy.de/index.php/login"
-API_ENDPOINT = "https://api.baubuddy.de/dev/index.php/v1/vehicles/select/active"
-PAYLOAD = {
-    "username": "365",
-    "password": "1"
-}
-HEADERS = {
-    "Authorization": "Basic QVBJX0V4cGxvcmVyOjEyMzQ1NmlzQUxhbWVQYXNz",
-    "Content-Type": "application/json"
-}
-
-
-response = requests.request("POST", LOGIN_URL, json=PAYLOAD, headers=HEADERS)
+# Function to authenticate and get an access token
+def authenticate():
+    global access_token
+    LOGIN_URL = "https://api.baubuddy.de/index.php/login"
+    HEADERS = {
+        "Authorization": "Basic QVBJX0V4cGxvcmVyOjEyMzQ1NmlzQUxhbWVQYXNz",
+        "Content-Type": "application/json"
+    }
+    PAYLOAD = {
+        "username": "365",
+        "password": "1"
+    }
+    response = requests.post(LOGIN_URL, json=PAYLOAD, headers=HEADERS)
+    if response.status_code == 200:
+        access_token = response.json().get("oauth", {}).get("access_token")
+        return True
+    return False
 
 @app.get("/")
 async def root():
