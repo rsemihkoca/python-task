@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException
 import requests
 from io import TextIOWrapper
 import pandas as pd
@@ -6,8 +6,9 @@ import pandas as pd
 
 app = FastAPI()
 
+access_token = ""
 # Function to authenticate and get an access token
-def authenticate():
+def get_access_token():
     global access_token
     LOGIN_URL = "https://api.baubuddy.de/index.php/login"
     HEADERS = {
@@ -21,8 +22,10 @@ def authenticate():
     response = requests.post(LOGIN_URL, json=PAYLOAD, headers=HEADERS)
     if response.status_code == 200:
         access_token = response.json().get("oauth", {}).get("access_token")
-        return True
-    return False
+        return access_token
+    else:
+        raise HTTPException(status_code=401, detail="Authentication failed")
+
 
 @app.get("/")
 async def root():
@@ -33,8 +36,9 @@ async def root():
 async def process_csv(
     file: UploadFile = File(...),
     keys: str = Form(...),
-    colored: bool = Form(True)
-):
+    colored: bool = Form(True),
+    access_token: str = Depends(get_access_token)
+    ):
     
     # Read the CSV file
     content = TextIOWrapper(file.file, encoding='utf-8')
