@@ -1,22 +1,33 @@
-
+from datetime import datetime
 import pandas as pd
 import argparse
+import requests
 
+API_ENDPOINT = "localhost:8000/process_csv"
 
 def main(csv_filename:str, keys:str, colored:str)->None:
 
-    # Load the CSV data
-    csv_data = pd.read_csv(csv_filename, engine="python")
-
     # Prepare the request payload
-    payload = {
-        "data": csv_data.to_dict(orient="records"),
+    data = {
         "keys": keys,
         "colored": colored
     }
 
-    
+    # Send a POST request to the server
+    response = requests.post(API_ENDPOINT, data=data, files={"file": (csv_filename, open(csv_filename, "rb"))})
 
+    if response.status_code == 200:
+        # Process the response JSON data
+
+        # Create an Excel file with the processed data
+        current_date = datetime.now().isoformat()
+        excel_file_name = f"vehicles_{current_date}.xlsx"
+
+        # Save the Excel file
+
+        print(f"Excel file '{excel_file_name}' saved.")
+    else:
+        print(f"Server returned an error: {response.status_code}")
 
 
 
