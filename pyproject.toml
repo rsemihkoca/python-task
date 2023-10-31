@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "src"
+version = "0.1.0"
+description = ""
+authors = ["Riza Semih Koca <rsemihkoca@outlook.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+argparse = "^1.4.0"
+requests = "^2.31.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
