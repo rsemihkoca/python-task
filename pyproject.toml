@@ -6,9 +6,10 @@ authors = ["Riza Semih Koca <rsemihkoca@outlook.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.8"
+python = ">=3.12,<3.13"
 argparse = "^1.4.0"
 requests = "^2.31.0"
+pandas = "^2.1.2"
 
 
 [build-system]

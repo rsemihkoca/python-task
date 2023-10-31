@@ -1,12 +1,21 @@
 
-
+import pandas as pd
 import argparse
 
 
-def main():
+def main(csv_filename:str, keys:str, colored:str)->None:
+
+    # Load the CSV data
+    csv_data = pd.read_csv(csv_filename, engine="python")
+
+    # Prepare the request payload
+    payload = {
+        "data": csv_data.to_dict(orient="records"),
+        "keys": keys,
+        "colored": colored
+    }
 
     
-    pass
 
 
 
@@ -20,7 +29,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     print("Parsed arguments:")
+    print(f"CSV file: {args.csv_file}")
     print(f"Keys: {args.keys}")
     print(f"Colored: {args.colored}")
 
-    main()
+    main(args.csv_file, args.keys, args.colored)
