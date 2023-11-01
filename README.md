@@ -1,3 +1,64 @@
+# Solution
+
+## Important notes
+
+
+Since vehicles.csv do not contain hu column only the ones have valid resolved color codes will be colored.
+
+![Alt text](assets/image-1.png)
+
+### Client
+1) Creates the name for the future excel file;
+2) Analyzes csv file;
+3) Sends post request with csv data to server and recieves merged data as response;
+4) Analyzes its own running parameters as `-k/--keys` and `-c/--colored`
+5) Creates excel file with columns which were called as -k parameters and fills the file with merged data. If there ware not `-k` parameters, it takes all the fields of dictionaries in responce.
+6) Colors the cells and font according to the task
+
+### Server
+1) Recieves csv data from client;
+2) Sends post request to authorization endpoint and recieves a token
+3) Using the token sends get request to main endpoint and recieves data
+4) Merges data from csv and data from responce
+5) Filters out any resources that do not have a value set for `hu` field
+6) Returns the result to client
+
+## Running program
+1) Clone repository:
+```
+$ git clone git@github.com:GoodLifeSeeker/python-task.git
+```
+2) Install and activate virtual environment:
+```
+- For Mac or Linux:
+$ python3 -m venv venv
+$ source venv/bin/activate
+
+- For Windows
+$ python -m venv venv
+$ source venv/Scripts/activate 
+``` 
+3) Install dependencies from requirements.txt.
+```
+$ pip install -r requirements.txt
+```
+4) Run server.py
+```
+$ python server.py
+(If 'python' command doesn't work, use 'python3')
+```
+
+5) Open another terminal and run client.py
+```
+$ python client.py
+(If 'python' command doesn't work, use 'python3')
+```
+6) You can find excel file in the root folder of the project
+
+
+
+# README
+
 Hello dear python dev!
 
 This repository is supposed to act as a playground for your submission.
@@ -80,7 +141,3 @@ headers = {
 response = requests.request("POST", url, json=payload, headers=headers)
 print(response.text)
 ```
-
-Since vehicles.csv do not contain hu column only the ones have valid resolved color codes will be colored.
-
-![Alt text](image-1.png)

@@ -1,9 +1,7 @@
 from openpyxl import Workbook
 from openpyxl.styles import PatternFill, Font, Color
 from datetime import datetime, timedelta
-import pandas as pd
 import argparse
-import requests
 import httpx
 import asyncio
 import json

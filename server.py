@@ -1,9 +1,8 @@
-from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, Request
+from fastapi import FastAPI, File, UploadFile, Depends, HTTPException, Request
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
 import requests
 import pandas as pd
-import csv, io, httpx
+import io, httpx
 
 app = FastAPI()
 
@@ -85,9 +84,6 @@ async def process_csv(
         # Filter vehicle_resources with 'hu' field not csv_data
         filtered_external_data = pd.DataFrame(vehicle_resources).dropna(subset=["hu"])
 
-        # Find intersecting columns between CSV and fetched data
-        # common_columns = list(set(csv_data.columns) & set(filtered_external_data.columns))
-
         # Remove duplicates and merge according to gruppe	kurzname	langtext	info	lagerort	labelIds
         merged_data = pd.concat([csv_data, filtered_external_data], ignore_index=True)
 
@@ -101,6 +97,7 @@ async def process_csv(
 
         # Map colorCode to the merged_data
         merged_data['colorCode'] = merged_data['labelIds'].map(labelId_color_map)
+
         # Convert the result to JSON format
         result_json = merged_data.to_json(orient="records")
 
@@ -110,8 +107,6 @@ async def process_csv(
     except Exception as e:
         error_message = str(e)
         return JSONResponse(content={"error": error_message}, status_code=500)
-
-
 
 
 if __name__ == "__main__":
