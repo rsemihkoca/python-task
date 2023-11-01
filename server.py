@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, Depends, JSONResponse, HTTPException
 import requests
 from io import TextIOWrapper
 import pandas as pd
@@ -27,6 +27,21 @@ def get_access_token():
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 
+def fetch_vehicle_data(access_token: str):
+    # Request vehicle data
+    vehicle_data_url = "https://api.baubuddy.de/dev/index.php/v1/vehicles/select/active"
+    headers = {"Authorization": f"Bearer {access_token}"}
+    response = requests.get(vehicle_data_url, headers=headers)
+    if response.status_code != 200:
+        return {"error": "Failed to fetch vehicle data"}
+
+    vehicle_data = response.json()
+
+    if vehicle_data.get("error"):
+        return None
+
+    return vehicle_data
+
 @app.get("/")
 async def root():
     return {"message": "Hello World"}
@@ -41,8 +56,28 @@ async def process_csv(
     ):
     
     # Read the CSV file
-    content = TextIOWrapper(file.file, encoding='utf-8')
-    df = pd.read_csv(content)
+    try:
+        content = TextIOWrapper(file.file, encoding='utf-8')
+        df = pd.read_csv(content, engine='python')
+
+        vehicle_data = fetch_vehicle_data(access_token)
+        
+        if vehicle_data is None:
+            return JSONResponse(content={"error": "Failed to fetch vehicle data"}, status_code=500)
+
+
+
+
+
+        response_data = {}  # Your processed data
+        return JSONResponse(content=response_data)
+
+    except Exception as e:
+        error_message = str(e)
+        return JSONResponse(content={"error": error_message}, status_code=500)
+
+
+
 
 if __name__ == "__main__":
     import uvicorn
