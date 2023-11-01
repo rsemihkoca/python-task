@@ -8,7 +8,7 @@ import asyncio
 API_ENDPOINT = "http://0.0.0.0:8000/process_csv"
 
 async def main(file_path:str, keys:str, colored:str)->None:
-    async with httpx.AsyncClient() as client:
+    async with httpx.AsyncClient(timeout=100) as client:
 
         with open(file_path, "rb") as file:
             files = {"file": (file_path, file)}
@@ -43,7 +43,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Client script for sending CSV data to the server.")
     parser.add_argument("-f", "--csv-file", required=True, help="Input CSV file")
     parser.add_argument("-k", "--keys", nargs='+', help="Additional columns to include in the Excel file")
-    parser.add_argument("-c", "--colored", action="store_true", help="Color rows based on hu age")
+    parser.add_argument("-c", "--colored", action="store_false", help="Color rows based on hu age")
     args = parser.parse_args()
 
     print("Parsed arguments:")
