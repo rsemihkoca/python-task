@@ -69,38 +69,12 @@ The server listens on the following API endpoint:
 ## Sample Output
 The server script processes the received CSV data and returns it in JSON format. The client script will then use this data to generate an Excel file.
 
-**Client README**
 
 # Client README
 
 ## Introduction
 This README provides information and instructions for using the Python client script, which is responsible for sending CSV data to a server and generating an Excel file with the received data. The client script is managed and run using Poetry.
 
-## Prerequisites
-Before using the client script, make sure you have Poetry installed on your Ubuntu system. You can install Poetry by running the following command:
-
-```bash
-curl -sSL https://install.python-poetry.org | python3 -
-```
-
-## Installation
-1. Clone or download the project directory containing the client script to your local machine. You can use the `git clone` command or download the repository as a ZIP file from the repository's web page.
-
-```bash
-git clone https://github.com/your/repo.git
-```
-
-2. Navigate to the project directory using the `cd` command:
-
-```bash
-cd repo
-```
-
-3. Install the required dependencies using Poetry:
-
-```bash
-poetry install
-```
 
 ## Usage
 To use the client script, follow these steps:
