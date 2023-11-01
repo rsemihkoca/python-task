@@ -14,6 +14,8 @@ API_ENDPOINT = "http://0.0.0.0:8000/process_csv"
 # Function to determine cell background color based on 'hu' value
 def get_cell_color(hu):
     today = datetime.today()
+    hu = datetime.strptime(hu, '%Y-%m-%d')
+
     if hu < today - timedelta(days=90):
         return PatternFill(start_color="007500", end_color="007500", fill_type="solid")  # Green
     elif hu < today - timedelta(days=365):
@@ -41,15 +43,41 @@ async def main(file_path:str, keys:str, colored:str)->None:
             # Sort by 'gruppe' field gruppe can be none
             server_data = sorted(server_data, key=lambda x: (x["gruppe"] is None, x["gruppe"]))
 
-            # Add 'rnr' column
+            # Add headers to the Excel sheet
+            headers = ['rnr']
+            if keys:
+                headers.extend(keys)
+            ws.append(headers)
 
+            # Add data to the Excel sheet
+            for key, item in enumerate(server_data, start=2):
+                row = [item['rnr']]
+                if keys:
+                    row.extend([item[key] if key in item else '' for key in keys])
+                ws.append(row)
+
+                if colored:
+                    hu = item.get('hu', None)
+                    if hu:
+                        cell_color = get_cell_color(hu)
+
+                        for cell in ws[key]:
+                            cell.fill = cell_color
+
+                if 'labelIds' in item and 'colorCodes' in item:
+                    label_ids = item['labelIds']
+                    color_codes = item['colorCodes']
+                    for label_id in label_ids:
+                        if label_id in color_codes:
+                            color_code = color_codes[label_id]
+                            for cell in ws[key]:
+                                cell.font.color.rgb = color_code
 
             # Save the Excel file with the current date in ISO format
             current_date_iso_formatted = datetime.now().isoformat()[:19].replace(':', '-')
-            wb.save(f'vehicles_{current_date_iso_formatted}.xlsx')
-
-            # Save the Excel file
-            print(f"Excel file '{'vehicles_{current_date_iso_formatted}.xlsx'}' saved.")
+            excel_filename = f'vehicles_{current_date_iso_formatted}.xlsx'
+            wb.save(excel_filename)
+            print(f"Excel file '{excel_filename}' saved.")
         else:
             print(f"Server returned an error: {response.status_code}")
 
