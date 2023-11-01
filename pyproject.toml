@@ -15,7 +15,6 @@ uvicorn = "^0.23.2"
 datetime = "^5.2"
 python-multipart = "^0.0.6"
 httpx = "^0.25.0"
-pydantic = "^2.4.2"
 openpyxl = "^3.1.2"
 
 
