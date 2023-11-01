@@ -30,6 +30,10 @@ def get_access_token():
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 
+async def resolve_label_color(labelId):
+    async with httpx.AsyncClient() as client:
+        response = await client.get(f"https://api.baubuddy.de/dev/index.php/v1/labels/{labelId}")
+        return response.json()["colorCode"]
 
 async def fetch_vehicle_resources(access_token: str):
     async with httpx.AsyncClient() as client:
@@ -65,20 +69,39 @@ async def process_csv(
         
         data = await file.read()
 
-        # Parse the CSV data
-        csv_data = []
         try:
-            csv_data = list(csv.reader(data.decode().splitlines()))
+            csv_data = pd.read_csv(io.BytesIO(data.decode()))
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error parsing CSV file: {str(e)}")
-
+        
         # Fetch vehicle resources from the API
         vehicle_resources = await fetch_vehicle_resources(access_token)
 
         if vehicle_resources is None:
             return JSONResponse(content={"error": "Failed to fetch vehicle data"}, status_code=500)
  
-        
+        # Filter vehicle_resources with 'hu' field not csv_data
+        filtered_external_data = pd.DataFrame(vehicle_resources).dropna(subset=["hu"])
+
+        # # Filter out resources without 'hu' field
+        # filtered_resources = [resource for resource in vehicle_resources if resource.get("hu")]
+
+        # Find intersecting columns between CSV and fetched data
+        common_columns = list(set(csv_data.columns) & set(filtered_external_data[0].keys()))
+
+        # Merge CSV data and fetched data based on common columns
+        merged_data = pd.merge(csv_data, pd.DataFrame(filtered_external_data), on=common_columns, how="inner")
+
+
+        # Fetch color codes for labelIds
+        filtered_external_data['colorCodes'] = filtered_external_data['labelIds'].apply(lambda label_ids: [resolve_label_color(label_id) for label_id in label_ids.split(',')])
+
+        # Select only the relevant columns
+        result_data = filtered_external_data[["rnr", "gruppe", "kurzname", "langtext", "info", "lagerort", "labelIds", "colorCodes"]]
+
+        # Convert the result to JSON format
+        result_json = result_data.to_json(orient="records")
+
 
     except Exception as e:
         error_message = str(e)
