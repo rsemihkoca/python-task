@@ -72,7 +72,7 @@ async def main(file_path:str, keys:str, colored:str)->None:
                         for cell in ws[key]:
                             cell.fill = cell_color
 
-                if 'labelIds' in item and 'colorCode' in item and item["colorCode"] is not None and item["colorCode"] != "":
+                if 'labelIds' in headers and 'colorCode' in item and item["colorCode"] is not None and item["colorCode"] != "":
                     color_code = item['colorCode']
                     for cell in ws[key]:
                         current_font = cell.font
