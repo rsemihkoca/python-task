@@ -78,7 +78,20 @@ async def process_csv(request_data: RequestData,  # Use request_data parameter t
         if vehicle_resources is None:
             return JSONResponse(content={"error": "Failed to fetch vehicle data"}, status_code=500)
  
+        # Merge the CSV data with the fetched resources and apply filtering
+        merged_data.clear()
+        for row in csv_data[1:]:  # Skip the header row
+            vehicle_id = row[0]
+            for vehicle in vehicle_resources:
+                if vehicle_id == str(vehicle["id"]) and vehicle.get("hu"):
+                    label_colors = await resolve_label_color(vehicle["labelIds"])
+                    merged_data.append({
+                        "id": vehicle["id"],
+                        "hu": vehicle["hu"],
+                        "labelColors": label_colors
+                    })
 
+        response_data =  {"merged_data": merged_data}
 
         return JSONResponse(content=response_data)
 

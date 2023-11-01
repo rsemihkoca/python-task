@@ -19,12 +19,12 @@ async def main(file_path:str, keys:str, colored:str)->None:
                 "colored": colored
             }
 
-        # Send a POST request to the server
-        response = await client.post(API_ENDPOINT, files=files, data=data)
+            # Send a POST request to the server
+            response = await client.post(API_ENDPOINT, files=files, data=data)
 
         if response.status_code == 200:
             # Process the response JSON data
-            
+
 
             # Create an Excel file with the processed data
             current_date = datetime.now().isoformat()
