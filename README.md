@@ -7,56 +7,147 @@ Since vehicles.csv do not contain hu column only the ones have valid resolved co
 
 ![Alt text](assets/image-1.png)
 
-### Client
-1) Creates the name for the future excel file;
-2) Analyzes csv file;
-3) Sends post request with csv data to server and recieves merged data as response;
-4) Analyzes its own running parameters as `-k/--keys` and `-c/--colored`
-5) Creates excel file with columns which were called as -k parameters and fills the file with merged data. If there ware not `-k` parameters, it takes all the fields of dictionaries in responce.
-6) Colors the cells and font according to the task
 
-### Server
-1) Recieves csv data from client;
-2) Sends post request to authorization endpoint and recieves a token
-3) Using the token sends get request to main endpoint and recieves data
-4) Merges data from csv and data from responce
-5) Filters out any resources that do not have a value set for `hu` field
-6) Returns the result to client
+# Server README
 
-## Running program
-1) Clone repository:
-```
-$ git clone git@github.com:GoodLifeSeeker/python-task.git
-```
-2) Install and activate virtual environment:
-```
-- For Mac or Linux:
-$ python3 -m venv venv
-$ source venv/bin/activate
+## Introduction
+This README provides information and instructions for setting up and using the Python server script, which is built with FastAPI and managed using Poetry. The server script is designed to process CSV data sent by the client and return the processed data in JSON format.
 
-- For Windows
-$ python -m venv venv
-$ source venv/Scripts/activate 
-``` 
-3) Install dependencies from requirements.txt.
-```
-$ pip install -r requirements.txt
-```
-4) Run server.py
-```
-$ python server.py
-(If 'python' command doesn't work, use 'python3')
+## Prerequisites
+Before using the server script, make sure you have Poetry installed on your Ubuntu system. You can install Poetry by running the following command:
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
 ```
 
-5) Open another terminal and run client.py
+## Installation
+1. Clone or download the project directory containing the server script to your local machine. You can use the `git clone` command or download the repository as a ZIP file from the repository's web page.
+
+```bash
+git clone https://github.com/rsemihkoca/python-task
 ```
-$ python client.py
-(If 'python' command doesn't work, use 'python3')
+
+2. Navigate to the project directory using the `cd` command:
+
+```bash
+cd repo
 ```
-6) You can find excel file in the root folder of the project
 
+3. Install the required dependencies using Poetry:
 
+```bash
+poetry install
+```
 
+4. Activate shell with Poetry:
+
+```bash
+poetry shell
+```
+## Usage
+To use the server script, follow these steps:
+
+1. Open a terminal.
+
+2. Navigate to the project directory.
+
+3. Run the server script using Poetry:
+
+```bash
+poetry run python server.py
+```
+
+4. The server will start and listen on `http://0.0.0.0:8000`. It is ready to receive POST requests with CSV data for processing.
+
+5. Ensure the client script is configured to send data to the correct API endpoint (`API_ENDPOINT` in the client script).
+
+## API Endpoint
+The server listens on the following API endpoint:
+
+- `http://0.0.0.0:8000/process_csv`
+
+## Sample Output
+The server script processes the received CSV data and returns it in JSON format. The client script will then use this data to generate an Excel file.
+
+**Client README**
+
+# Client README
+
+## Introduction
+This README provides information and instructions for using the Python client script, which is responsible for sending CSV data to a server and generating an Excel file with the received data. The client script is managed and run using Poetry.
+
+## Prerequisites
+Before using the client script, make sure you have Poetry installed on your Ubuntu system. You can install Poetry by running the following command:
+
+```bash
+curl -sSL https://install.python-poetry.org | python3 -
+```
+
+## Installation
+1. Clone or download the project directory containing the client script to your local machine. You can use the `git clone` command or download the repository as a ZIP file from the repository's web page.
+
+```bash
+git clone https://github.com/your/repo.git
+```
+
+2. Navigate to the project directory using the `cd` command:
+
+```bash
+cd repo
+```
+
+3. Install the required dependencies using Poetry:
+
+```bash
+poetry install
+```
+
+## Usage
+To use the client script, follow these steps:
+
+1. Open a terminal.
+
+2. Navigate to the directory where the client script is located.
+
+3. Run the client script using Poetry with the required arguments. You can use the following command:
+
+```bash
+poetry run python client.py -f CSV_FILE_PATH [-k KEY [KEY ...]] [-c]
+```
+
+Replace the following placeholders:
+- `CSV_FILE_PATH` with the path to your input CSV file.
+- `KEY` with additional column names to include in the generated Excel file.
+- `-c` to enable row coloring based on `hu` age (optional).
+
+Example usages:
+
+- Basic usage without additional keys or row coloring:
+  ```bash
+  poetry run python client.py -f input.csv
+  ```
+
+- Including additional keys in the Excel file:
+  ```bash
+  poetry run python client.py -f input.csv -k column1 column2
+  ```
+
+- Enabling row coloring based on `hu` age:
+  ```bash
+  poetry run python client.py -f input.csv -c
+  ```
+
+4. The client script will send a POST request to the server specified in `API_ENDPOINT`. It will receive the data in response, generate an Excel file, and save it with a timestamp in the filename.
+
+5. The generated Excel file will be saved in the same directory as the client script.
+
+## Arguments
+- `-f`, `--csv-file`: Required. The path to the input CSV file to be sent to the server.
+- `-k`, `--keys`: Optional. Additional column names to include in the Excel file. Provide one or more column names as arguments separated by spaces.
+- `-c`, `--colored`: Optional. Enable row coloring based on `hu` age. If this flag is included, rows will be colored in the Excel file.
+
+## Sample Output
+The client script will generate an Excel file in the same directory as the script. The filename will include a timestamp in ISO format. For example, `vehicles_2023-11-01T10-30-00.xlsx`.
 # README
 
 Hello dear python dev!
