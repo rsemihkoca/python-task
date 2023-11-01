@@ -70,7 +70,7 @@ async def process_csv(
         data = await file.read()
 
         try:
-            csv_data = pd.read_csv(io.BytesIO(data.decode()))
+            csv_data = pd.read_csv(io.BytesIO(data), engine="python", sep=";")
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Error parsing CSV file: {str(e)}")
         
@@ -83,16 +83,13 @@ async def process_csv(
         # Filter vehicle_resources with 'hu' field not csv_data
         filtered_external_data = pd.DataFrame(vehicle_resources).dropna(subset=["hu"])
 
-        # # Filter out resources without 'hu' field
-        # filtered_resources = [resource for resource in vehicle_resources if resource.get("hu")]
-
         # Find intersecting columns between CSV and fetched data
-        common_columns = list(set(csv_data.columns) & set(filtered_external_data[0].keys()))
+        common_columns = list(set(csv_data.columns) & set(filtered_external_data.columns))
 
         # Merge CSV data and fetched data based on common columns
-        merged_data = pd.merge(csv_data, pd.DataFrame(filtered_external_data), on=common_columns, how="inner")
+        # merged_data = pd.concat(csv_data, pd.DataFrame(filtered_external_data), keys==common_columns, axis=0)
 
-
+        merged_data = pd.concat([csv_data, filtered_external_data], axis=0).drop_duplicates()
         # Fetch color codes for labelIds
         filtered_external_data['colorCodes'] = filtered_external_data['labelIds'].apply(lambda label_ids: [resolve_label_color(label_id) for label_id in label_ids.split(',')])
 
