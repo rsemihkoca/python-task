@@ -30,10 +30,12 @@ def get_access_token():
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 
-async def resolve_label_color(labelId):
+async def resolve_label_color(access_token: str, labelId):
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"https://api.baubuddy.de/dev/index.php/v1/labels/{labelId}")
-        return response.json()["colorCode"]
+        url = f"https://api.baubuddy.de/dev/index.php/v1/labels/{labelId}"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = await client.get(url=url, headers=headers)
+        return response.json()[0].get("colorCode")
 
 async def fetch_vehicle_resources(access_token: str):
     async with httpx.AsyncClient() as client:
@@ -57,8 +59,8 @@ async def root():
 @app.post("/process_csv")
 async def process_csv(
     file: UploadFile = File(...),
-    keys: str = Form(...),
-    colored: bool = Form(True),
+    # keys: str = Form(...),
+    # colored: bool = Form(True),
     access_token: str = Depends(get_access_token)
 ):
     
@@ -84,20 +86,25 @@ async def process_csv(
         filtered_external_data = pd.DataFrame(vehicle_resources).dropna(subset=["hu"])
 
         # Find intersecting columns between CSV and fetched data
-        common_columns = list(set(csv_data.columns) & set(filtered_external_data.columns))
+        # common_columns = list(set(csv_data.columns) & set(filtered_external_data.columns))
 
-        # Merge CSV data and fetched data based on common columns
-        # merged_data = pd.concat(csv_data, pd.DataFrame(filtered_external_data), keys==common_columns, axis=0)
+        # Remove duplicates and merge according to gruppe	kurzname	langtext	info	lagerort	labelIds
+        merged_data = pd.concat([csv_data, filtered_external_data], ignore_index=True)
 
-        merged_data = pd.concat([csv_data, filtered_external_data], axis=0).drop_duplicates()
-        # Fetch color codes for labelIds
-        filtered_external_data['colorCodes'] = filtered_external_data['labelIds'].apply(lambda label_ids: [resolve_label_color(label_id) for label_id in label_ids.split(',')])
+        # Resolve colorCode for labelIds using async functions
+        labelId_color_map = {}
+        for labelId in merged_data['labelIds']:
+            if pd.notna(labelId) and labelId is not None:
+                if isinstance(labelId, (int, float)):
+                    colorCode = await resolve_label_color(access_token, int(labelId))
+                    labelId_color_map[labelId] = colorCode
 
-        # Select only the relevant columns
-        result_data = filtered_external_data[["rnr", "gruppe", "kurzname", "langtext", "info", "lagerort", "labelIds", "colorCodes"]]
-
+        # Map colorCode to the merged_data
+        merged_data['colorCode'] = merged_data['labelIds'].map(labelId_color_map)
         # Convert the result to JSON format
-        result_json = result_data.to_json(orient="records")
+        result_json = merged_data.to_json(orient="records")
+
+        return JSONResponse(content=result_json, status_code=200)
 
 
     except Exception as e:
