@@ -81,4 +81,6 @@ response = requests.request("POST", url, json=payload, headers=headers)
 print(response.text)
 ```
 
+Since vehicles.csv do not contain hu column only the ones have valid resolved color codes will be colored.
+
 ![Alt text](image-1.png)
