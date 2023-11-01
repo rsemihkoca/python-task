@@ -1,5 +1,5 @@
 from openpyxl import Workbook
-from openpyxl.styles import PatternFill
+from openpyxl.styles import PatternFill, Font, Color
 from datetime import datetime, timedelta
 import pandas as pd
 import argparse
@@ -10,6 +10,14 @@ import json
 
 
 API_ENDPOINT = "http://0.0.0.0:8000/process_csv"
+
+def hex_to_rgb(hex_color):
+    """Return (red, green, blue) for the color given as #rrggbb."""
+    red = int(hex_color[1:3], 16)
+    green = int(hex_color[3:5], 16)
+    blue = int(hex_color[5:7], 16)
+
+    return f"FF{red:02X}{green:02X}{blue:02X}"
 
 # Function to determine cell background color based on 'hu' value
 def get_cell_color(hu):
@@ -64,14 +72,18 @@ async def main(file_path:str, keys:str, colored:str)->None:
                         for cell in ws[key]:
                             cell.fill = cell_color
 
-                if 'labelIds' in item and 'colorCodes' in item:
-                    label_ids = item['labelIds']
-                    color_codes = item['colorCodes']
-                    for label_id in label_ids:
-                        if label_id in color_codes:
-                            color_code = color_codes[label_id]
-                            for cell in ws[key]:
-                                cell.font.color.rgb = color_code
+                if 'labelIds' in item and 'colorCode' in item and item["colorCode"] is not None and item["colorCode"] != "":
+                    color_code = item['colorCode']
+                    for cell in ws[key]:
+                        current_font = cell.font
+
+                        # Create a new Font object by copying the existing font and changing the color
+                        new_font = Font(name=current_font.name, size=current_font.size, bold=current_font.bold, italic=current_font.italic, 
+                                        underline=current_font.underline, strike=current_font.strike, color=Color(rgb=hex_to_rgb(color_code)))
+
+                        # Apply the modified font back to the cell
+                        cell.font = new_font
+
 
             # Save the Excel file with the current date in ISO format
             current_date_iso_formatted = datetime.now().isoformat()[:19].replace(':', '-')
