@@ -1,12 +1,20 @@
-from fastapi import FastAPI, File, UploadFile, Form, Depends, JSONResponse, HTTPException
+from fastapi import FastAPI, File, UploadFile, Form, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel
 import requests
-from io import TextIOWrapper
 import pandas as pd
-
+import csv, io, httpx
 
 app = FastAPI()
 
 access_token = ""
+merged_data = []
+
+class RequestData(BaseModel):
+    file: UploadFile = File(...)  # The UploadFile parameter is defined correctly
+    keys: str = Form(...)
+    colored: bool = Form(True)
+
 # Function to authenticate and get an access token
 def get_access_token():
     global access_token
@@ -27,20 +35,19 @@ def get_access_token():
         raise HTTPException(status_code=401, detail="Authentication failed")
 
 
-def fetch_vehicle_data(access_token: str):
-    # Request vehicle data
-    vehicle_data_url = "https://api.baubuddy.de/dev/index.php/v1/vehicles/select/active"
-    headers = {"Authorization": f"Bearer {access_token}"}
-    response = requests.get(vehicle_data_url, headers=headers)
-    if response.status_code != 200:
-        return {"error": "Failed to fetch vehicle data"}
+async def fetch_vehicle_resources(access_token: str):
+    async with httpx.AsyncClient() as client:
+        url = "https://api.baubuddy.de/dev/index.php/v1/vehicles/select/active"
+        headers = {"Authorization": f"Bearer {access_token}"}
+        response = await client.get(url, headers=headers)
+        if response.status_code != 200:
+            return {"error": "Failed to fetch vehicle data"}
 
-    vehicle_data = response.json()
+        vehicle_data = response.json()
 
-    if vehicle_data.get("error"):
-        return None
-
-    return vehicle_data
+        if len(vehicle_data) == 0:
+            return None
+        return vehicle_data
 
 @app.get("/")
 async def root():
@@ -48,28 +55,31 @@ async def root():
 
 
 @app.post("/process_csv")
-async def process_csv(
-    file: UploadFile = File(...),
-    keys: str = Form(...),
-    colored: bool = Form(True),
-    access_token: str = Depends(get_access_token)
-    ):
+async def process_csv(request_data: RequestData,  # Use request_data parameter to access RequestData model
+                      access_token: str = Depends(get_access_token)):
     
     # Read the CSV file
     try:
-        content = TextIOWrapper(file.file, encoding='utf-8')
-        df = pd.read_csv(content, engine='python')
-
-        vehicle_data = fetch_vehicle_data(access_token)
+        if not file.filename.endswith('.csv'):
+            raise HTTPException(status_code=400, detail="Invalid file format. Please upload a CSV file.")
         
-        if vehicle_data is None:
+        data = await file.read()
+
+        # Parse the CSV data
+        csv_data = []
+        try:
+            csv_data = list(csv.reader(data.decode().splitlines()))
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Error parsing CSV file: {str(e)}")
+
+        # Fetch vehicle resources from the API
+        vehicle_resources = await fetch_vehicle_resources(access_token)
+
+        if vehicle_resources is None:
             return JSONResponse(content={"error": "Failed to fetch vehicle data"}, status_code=500)
+ 
 
 
-
-
-
-        response_data = {}  # Your processed data
         return JSONResponse(content=response_data)
 
     except Exception as e:
