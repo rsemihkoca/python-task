@@ -10,11 +10,6 @@ app = FastAPI()
 access_token = ""
 merged_data = []
 
-class RequestData(BaseModel):
-    file: UploadFile = File(...)  # The UploadFile parameter is defined correctly
-    keys: str = Form(...)
-    colored: bool = Form(True)
-
 # Function to authenticate and get an access token
 def get_access_token():
     global access_token
@@ -33,6 +28,7 @@ def get_access_token():
         return access_token
     else:
         raise HTTPException(status_code=401, detail="Authentication failed")
+
 
 
 async def fetch_vehicle_resources(access_token: str):
@@ -55,8 +51,12 @@ async def root():
 
 
 @app.post("/process_csv")
-async def process_csv(request_data: RequestData,  # Use request_data parameter to access RequestData model
-                      access_token: str = Depends(get_access_token)):
+async def process_csv(
+    file: UploadFile = File(...),
+    keys: str = Form(...),
+    colored: bool = Form(True),
+    access_token: str = Depends(get_access_token)
+):
     
     # Read the CSV file
     try:
@@ -78,22 +78,7 @@ async def process_csv(request_data: RequestData,  # Use request_data parameter t
         if vehicle_resources is None:
             return JSONResponse(content={"error": "Failed to fetch vehicle data"}, status_code=500)
  
-        # Merge the CSV data with the fetched resources and apply filtering
-        merged_data.clear()
-        for row in csv_data[1:]:  # Skip the header row
-            vehicle_id = row[0]
-            for vehicle in vehicle_resources:
-                if vehicle_id == str(vehicle["id"]) and vehicle.get("hu"):
-                    label_colors = await resolve_label_color(vehicle["labelIds"])
-                    merged_data.append({
-                        "id": vehicle["id"],
-                        "hu": vehicle["hu"],
-                        "labelColors": label_colors
-                    })
-
-        response_data =  {"merged_data": merged_data}
-
-        return JSONResponse(content=response_data)
+        
 
     except Exception as e:
         error_message = str(e)

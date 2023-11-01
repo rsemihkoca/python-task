@@ -1,0 +1,10 @@
+{
+    "python.formatting.provider": "none",
+    "editor.formatOnSave": true,
+    "python.linting.enabled": true,
+    "python.linting.lintOnSave": true,
+    "debug.inlineValues": "on",
+    "[python]": {
+      "editor.defaultFormatter": "ms-python.black-formatter"
+    }
+  }
