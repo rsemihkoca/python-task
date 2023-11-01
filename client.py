@@ -6,6 +6,8 @@ import argparse
 import requests
 import httpx
 import asyncio
+import json
+
 
 API_ENDPOINT = "http://0.0.0.0:8000/process_csv"
 
@@ -30,21 +32,24 @@ async def main(file_path:str, keys:str, colored:str)->None:
 
         # Check if the response status code is successful
         if response.status_code == 200:
-            server_data = response.json()
+            # Create an Excel workbook
+            wb = Workbook()
+            ws = wb.active
 
-            # Sort by 'gruppe' field
-            server_data.sort(key=lambda x: x['gruppe'])
+            server_data = json.loads(response.json())
+
+            # Sort by 'gruppe' field gruppe can be none
+            server_data = sorted(server_data, key=lambda x: (x["gruppe"] is None, x["gruppe"]))
 
             # Add 'rnr' column
-            keys = set(keys) | {'rnr'}
 
-            # Create an Excel file with the processed data
-            current_date = datetime.now().isoformat()
-            excel_file_name = f"vehicles_{current_date}.xlsx"
+
+            # Save the Excel file with the current date in ISO format
+            current_date_iso_formatted = datetime.now().isoformat()[:19].replace(':', '-')
+            wb.save(f'vehicles_{current_date_iso_formatted}.xlsx')
 
             # Save the Excel file
-
-            print(f"Excel file '{excel_file_name}' saved.")
+            print(f"Excel file '{'vehicles_{current_date_iso_formatted}.xlsx'}' saved.")
         else:
             print(f"Server returned an error: {response.status_code}")
 
