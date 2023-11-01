@@ -14,13 +14,13 @@ async def main(file_path:str, keys:str, colored:str)->None:
             files = {"file": (file_path, file)}
 
             # Define the form data
-            data = {
-                "keys": keys,
-                "colored": colored
-            }
+            # data = {
+            #     "keys": keys,
+            #     "colored": colored
+            # }
 
             # Send a POST request to the server
-            response = await client.post(API_ENDPOINT, files=files, data=data)
+            response = await client.post(API_ENDPOINT, files=files) #, data=data)
 
         if response.status_code == 200:
             # Process the response JSON data
